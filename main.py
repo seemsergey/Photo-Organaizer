@@ -87,6 +87,7 @@ class PhotosorterApp(tk.Tk):
             self.CloneButton.grid(column=1, row=1, sticky="nsew", padx=10)
 
 
+# старт
 if __name__ == "__main__":
     app = PhotosorterApp()
     app.mainloop()

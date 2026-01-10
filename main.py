@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import ttk
 
-from photo_handler import PhotoHandler
+from photoHandlerAlgorithm import PhotoHandler
 
 
 class PhotosorterApp(tk.Tk):

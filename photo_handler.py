@@ -65,13 +65,13 @@ class PhotoHandler:
         self.ProgressBar = None
 
     def GetFiles(self, path="."):
-        contents = os.listdir(path)
-        files = []
-        for item in contents:
-            item_path = os.path.join(path, item)
-            if os.path.isfile(item_path) and item_path[item_path.rfind('.'):].lower() in self.image_extensions:
-                files.append(item_path)
-        return files
+        imageFiles = []
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                _, ext = os.path.splitext(file)
+                if ext.lower() in self.image_extensions:
+                    imageFiles.append(os.path.join(root, file))
+        return imageFiles
 
     def GetImgMetadata(self, image_path):
         try:

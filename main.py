@@ -1,92 +1,84 @@
 import tkinter as tk
-from tkinter import filedialog
-from tkinter import ttk
-
-from photoHandlerAlgorithm import PhotoHandler
+from tkinter import filedialog, ttk, messagebox
+from mediaHandler import MediaHandler
 
 
-class PhotosorterApp(tk.Tk):
+class UniversalSorterApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Сортировщик фото")
-        self.geometry("275x150")
-        self.resizable(False, False)
-        self.report = None
-        self.text = None
-        self.SaveButton = None
-        self.CloneButton = None
-        self.OkButton = None
-        self.AnalysButton = ttk.Button(text="Проанализировать файлы", command=lambda: self.AnalysisStart())
-        self.SortButton = ttk.Button(text="Отсортировать файлы", command=lambda: self.ChangeButton("sort"))
-        self.AnalysButton.grid(column=0, row=1, sticky="nsew", padx=10)
-        self.SortButton.grid(column=1, row=1, sticky="nsew", padx=10)
+        self.title("Сортировщик Медиа")
+        self.geometry("400x250")
 
-    def AnalysisStart(self):
-        FolderPath = filedialog.askdirectory(title="Выберите папку с фото")
-        if FolderPath:
-            handler = PhotoHandler(FolderPath, None, None)
-            handler.Analysis()
-            self.AnalysButton.destroy()
-            self.SortButton.destroy()
-            self.report = {
-                'processed': handler.MovedFiles,
-                'failed': handler.BadFiles
-            }
-            report_text = (
-                f"✔️ Будет обработано: {self.report['processed']} файлов\n"
-                f"❌ Без даты: {self.report['failed']} (в \"Иные\")"
-            )
-            self.text = tk.Text(self, wrap="word", height=10, width=45, borderwidth=0)
-            self.text.insert("1.0", report_text)
-            self.text.config(state="disabled", bg=self.cget("bg"))
-            self.text.pack(pady=10)
-            self.OkButton = ttk.Button(text="Ok", command=lambda : self.ChangeButton("ok"))
-            self.OkButton.pack(anchor="nw", pady=100)
+        # Переменные для галочек
+        self.use_photo = tk.BooleanVar(value=True)
+        self.use_video = tk.BooleanVar(value=True)
 
+        self.create_widgets()
 
-    def SortStart(self, button):
-        FolderPath = filedialog.askdirectory(title="Выберите папку с фото")
-        if FolderPath:
-            SortFolderPath = filedialog.askdirectory(title="Выберите папку сортировки фото")
+    def create_widgets(self):
+        # Очистка окна
+        for widget in self.winfo_children():
+            widget.destroy()
 
-            handler = PhotoHandler(FolderPath, SortFolderPath, button)
-            handler.ProcessSort()
-            self.report = {
-                'processed': handler.MovedFiles,
-                'failed': handler.BadFiles,
-                'FoldersCreated': handler.DirsMade
-            }
-            self.ShowReport()
-        else:
-            self.destroy()
+        main_frame = ttk.Frame(self, padding="20")
+        main_frame.pack(expand=True, fill="both")
 
-    def ShowReport(self):
-        self.SaveButton.destroy()
-        self.CloneButton.destroy()
-        report_text = (
-            f"✔️ Обработано: {self.report['processed']} файлов\n"
-            f"❌ Без даты: {self.report['failed']} (в \"Иные\")\n"
-            f"📁 Создано папок: {self.report['FoldersCreated']}"
-        )
-        if self.text:
-            self.text.destroy()
+        ttk.Label(main_frame, text="Что сортируем?", font=("Arial", 12, "bold")).pack(pady=5)
 
-        self.text = tk.Text(self, wrap="word", height=10, width=45, borderwidth=0)
-        self.text.insert("1.0", report_text)
-        self.text.config(state="disabled", bg=self.cget("bg"))
-        self.text.pack(pady=20)
+        # Чекбоксы
+        ttk.Checkbutton(main_frame, text="Фотографии", variable=self.use_photo).pack(anchor="w")
+        ttk.Checkbutton(main_frame, text="Видеофайлы", variable=self.use_video).pack(anchor="w")
 
-    def ChangeButton(self, button):
-        if button == "sort":
-            self.AnalysButton.destroy()
-            self.SortButton.destroy()
-            self.SaveButton = ttk.Button(text="Перенести файлы", command=lambda: self.SortStart("move"))
-            self.CloneButton = ttk.Button(text="Клонировать файлы", command=lambda: self.SortStart("copy"))
-            self.SaveButton.grid(column=0, row=1, sticky="nsew", padx=10)
-            self.CloneButton.grid(column=1, row=1, sticky="nsew", padx=10)
+        btn_frame = ttk.Frame(main_frame)
+        btn_frame.pack(pady=20)
+
+        self.btn_analys = ttk.Button(btn_frame, text="Анализ", command=self.start_analysis)
+        self.btn_analys.grid(row=0, column=0, padx=5)
+
+        self.btn_sort = ttk.Button(btn_frame, text="Сортировка", command=self.show_sort_options)
+        self.btn_sort.grid(row=0, column=1, padx=5)
+
+    def start_analysis(self):
+        if not (self.use_photo.get() or self.use_video.get()):
+            messagebox.showwarning("Внимание", "Выберите хотя бы один тип файлов!")
+            return
+
+        path = filedialog.askdirectory(title="Выберите папку для анализа")
+        if path:
+            handler = MediaHandler(path, None, None, self.use_photo.get(), self.use_video.get())
+            handler.process(is_analysis=True)
+
+            res_text = (f"Найдено файлов: {handler.count_ok + handler.count_bad}\n"
+                        f"С датой: {handler.count_ok}\n"
+                        f"Без даты: {handler.count_bad}")
+            messagebox.showinfo("Результат анализа", res_text)
+
+    def show_sort_options(self):
+        if not (self.use_photo.get() or self.use_video.get()):
+            messagebox.showwarning("Внимание", "Выберите хотя бы один тип файлов!")
+            return
+
+        self.btn_analys.destroy()
+        self.btn_sort.destroy()
+
+        ttk.Label(text="Выберите действие:").pack()
+        ttk.Button(text="Копировать файлы", command=lambda: self.run_sort("copy")).pack(pady=5)
+        ttk.Button(text="Перенести (вырезать)", command=lambda: self.run_sort("move")).pack(pady=5)
+        ttk.Button(text="Назад", command=self.create_widgets).pack(pady=5)
+
+    def run_sort(self, mode):
+        src = filedialog.askdirectory(title="Откуда брать файлы?")
+        if not src: return
+        dst = filedialog.askdirectory(title="Куда складывать?")
+        if not dst: return
+
+        handler = MediaHandler(src, dst, mode, self.use_photo.get(), self.use_video.get())
+        handler.process(is_analysis=False)
+
+        messagebox.showinfo("Готово", f"Успешно обработано: {handler.count_ok}\nВ 'Неизвестные': {handler.count_bad}")
+        self.create_widgets()
 
 
-# старт
 if __name__ == "__main__":
-    app = PhotosorterApp()
+    app = UniversalSorterApp()
     app.mainloop()

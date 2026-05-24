@@ -56,7 +56,7 @@ class PhotoHandler:
         ]
 
         self.pth = FoldPath
-        self.sortpth = SortFolderPath
+        self.sortPth = SortFolderPath
         self.operation = command
         self.MovedFiles = 0
         self.BadFiles = 0
@@ -96,7 +96,7 @@ class PhotoHandler:
             month = metadata['DateTimeOriginal'][5:7]
             year = metadata['DateTimeOriginal'][:4]
 
-            year_path = os.path.join(self.sortpth, year)
+            year_path = os.path.join(self.sortPth, year)
             if not os.path.exists(year_path):
                 os.mkdir(year_path)
                 self.DirsMade += 1
@@ -109,7 +109,7 @@ class PhotoHandler:
             target_path = os.path.join(month_path, os.path.basename(FilePath))
             self.MovedFiles += 1
         else:
-            other_path = os.path.join(self.sortpth, "Иные")
+            other_path = os.path.join(self.sortPth, "Иные")
             if not os.path.exists(other_path):
                 os.mkdir(other_path)
                 self.DirsMade += 1

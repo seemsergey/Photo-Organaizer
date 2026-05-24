@@ -47,7 +47,6 @@ class PhotosorterApp(tk.Tk):
     def SortStart(self, button):
         FolderPath = filedialog.askdirectory(title="Выберите папку с фото")
         if FolderPath:
-
             SortFolderPath = filedialog.askdirectory(title="Выберите папку сортировки фото")
 
             handler = PhotoHandler(FolderPath, SortFolderPath, button)
